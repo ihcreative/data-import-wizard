@@ -1,0 +1,2125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Data Import Wizard</title>
+<script src="https://cdn.jsdelivr.net/npm/lucide@latest/dist/umd/lucide.min.js"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  /* SLDS 2 / Cosmos tokens */
+  --color-brand: #0176d3;
+  --color-brand-dark: #014486;
+  --color-brand-light: #e8f4ff;
+  --color-success: #2e844a;
+  --color-success-bg: #eaf5ea;
+  --color-warning: #dd7a01;
+  --color-warning-bg: #fef5e0;
+  --color-error: #ba0517;
+  --color-border: #c9c7c5;
+  --color-border-light: #e5e5e5;
+  --color-bg: #f3f3f3;
+  --color-bg-card: #ffffff;
+  --color-bg-header: #f8f8f8;
+  --color-text: #181818;
+  --color-text-weak: #706e6b;
+  --color-text-placeholder: #aeacaa;
+  --color-unmapped-bg: #fef5e0;
+  --color-unmapped-text: #7a5000;
+  --color-mapped-bg: #eaf5ea;
+  --color-mapped-text: #2e6b3e;
+  --color-ignored-bg: #f3f3f3;
+  --color-ignored-text: #706e6b;
+  --shadow-card: 0 2px 8px rgba(0,0,0,0.08);
+  --shadow-overlay: 0 8px 32px rgba(0,0,0,0.18);
+  --radius: 6px;
+  --font: "Salesforce Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-size-base: 13px;
+  --font-size-sm: 11px;
+  --font-size-lg: 16px;
+  --font-size-xl: 20px;
+}
+
+body {
+  font-family: var(--font);
+  font-size: var(--font-size-base);
+  color: var(--color-text);
+  background: var(--color-bg);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  line-height: 1.5;
+}
+
+/* ---- HEADER ---- */
+.app-header {
+  background: #032d60;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  gap: 16px;
+  flex-shrink: 0;
+}
+
+.sf-logo {
+  color: white;
+  font-size: 20px;
+  font-weight: 300;
+  letter-spacing: -0.5px;
+}
+
+.sf-logo strong { font-weight: 700; }
+
+.app-header-title {
+  color: rgba(255,255,255,0.85);
+  font-size: 13px;
+  margin-left: 8px;
+  border-left: 1px solid rgba(255,255,255,0.3);
+  padding-left: 16px;
+}
+
+.header-help {
+  margin-left: auto;
+  color: rgba(255,255,255,0.75);
+  font-size: 12px;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.header-help:hover { color: white; }
+
+/* ---- PROGRESS ---- */
+.progress-bar {
+  background: var(--color-bg-card);
+  border-bottom: 1px solid var(--color-border-light);
+  padding: 12px 24px 0;
+  display: none;
+}
+
+.progress-steps {
+  display: flex;
+  align-items: flex-start;
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+.progress-step-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.progress-connector {
+  flex: 1;
+  height: 2px;
+  background: var(--color-border);
+  margin-top: 14px;
+  transition: background 0.3s;
+}
+
+.progress-connector.done { background: var(--color-brand); }
+
+.progress-dot {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid var(--color-border);
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-text-weak);
+  transition: all 0.3s;
+  flex-shrink: 0;
+}
+
+.progress-dot.active {
+  border-color: var(--color-brand);
+  background: var(--color-brand);
+  color: white;
+}
+
+.progress-dot.done {
+  border-color: var(--color-brand);
+  background: var(--color-brand);
+  color: white;
+}
+
+.progress-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-text-weak);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  white-space: nowrap;
+  padding-bottom: 10px;
+}
+
+.progress-label.active { color: var(--color-brand); }
+.progress-label.done { color: var(--color-brand); }
+
+/* ---- LAYOUT ---- */
+.main {
+  flex: 1;
+  padding: 20px 24px;
+  max-width: 1100px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.page { display: none; }
+.page.active { display: block; }
+
+/* ---- CARD ---- */
+.card {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+
+.card-header {
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--color-border-light);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--color-bg-header);
+}
+
+.card-header h2 {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.card-header h2 strong { color: var(--color-brand); }
+
+.help-link {
+  color: var(--color-brand);
+  font-size: 12px;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.help-link:hover { text-decoration: underline; }
+
+/* ---- LANDING ---- */
+.landing-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.landing-top h1 {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.landing-top .page-help { display: flex; gap: 12px; font-size: 12px; }
+
+.info-banner {
+  background: #e8f4ff;
+  border: 1px solid #aacff5;
+  border-radius: var(--radius);
+  padding: 14px 18px;
+  margin-bottom: 16px;
+  position: relative;
+  font-size: 13px;
+}
+
+.info-banner h3 { font-weight: 700; font-size: 13px; margin-bottom: 8px; color: #014486; }
+.info-banner ul { padding-left: 18px; }
+.info-banner li { margin-bottom: 5px; color: #032d60; }
+.info-banner-close {
+  position: absolute; top: 10px; right: 14px;
+  background: none; border: none; font-size: 18px;
+  color: var(--color-text-weak); cursor: pointer; line-height: 1;
+}
+
+.wizard-card {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-card);
+  padding: 32px;
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+.wizard-card h2 { font-size: var(--font-size-xl); font-weight: 700; margin-bottom: 6px; }
+.wizard-card .subtitle { color: var(--color-text-weak); font-size: 13px; margin-bottom: 28px; }
+
+.step-icons {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 0;
+  margin-bottom: 28px;
+  flex-wrap: wrap;
+}
+
+.step-icon-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: 120px;
+}
+
+.step-icon {
+  font-size: 36px;
+  line-height: 1;
+  color: #616161;
+  display: block;
+}
+
+.step-icon-label {
+  font-size: 12px;
+  color: var(--color-text-weak);
+  font-weight: 600;
+  max-width: 90px;
+  text-align: center;
+  line-height: 1.4;
+}
+
+.step-icon-connector {
+  color: #bdbdbd;
+  font-size: 18px;
+  margin-top: 18px;
+  flex-shrink: 0;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 22px;
+  border-radius: var(--radius);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all 0.15s;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.btn-brand { background: var(--color-brand); color: white; border-color: var(--color-brand); }
+.btn-brand:hover { background: var(--color-brand-dark); border-color: var(--color-brand-dark); }
+.btn-neutral { background: white; color: var(--color-brand); border-color: var(--color-border); }
+.btn-neutral:hover { background: #f4f6f9; }
+.btn-success { background: var(--color-success); color: white; border-color: var(--color-success); }
+.btn-success:hover { background: #1a5c30; }
+.btn-lg { padding: 12px 32px; font-size: 15px; }
+
+.tips-section {
+  margin-bottom: 14px;
+}
+
+.tips-section h3 { font-size: 15px; font-weight: 700; margin-bottom: 12px; }
+.tips-section ul { padding-left: 20px; }
+.tips-section li { margin-bottom: 8px; font-size: 13px; line-height: 1.5; }
+.tips-section a { color: var(--color-brand); text-decoration: none; }
+
+.landing-bottom {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.landing-video {
+  width: 200px;
+  height: 130px;
+  background: #d9e5f5;
+  border-radius: var(--radius);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  font-size: 32px;
+  color: var(--color-brand);
+  border: 1px solid var(--color-border-light);
+}
+
+.landing-faq { flex: 1; }
+.landing-faq h4 { font-size: 14px; font-weight: 700; margin-bottom: 10px; }
+.landing-faq li { margin-bottom: 6px; }
+.landing-faq a { color: var(--color-brand); font-size: 13px; text-decoration: none; }
+.landing-faq a:hover { text-decoration: underline; }
+
+/* ---- STEP 1 ---- */
+.step1-sections {
+  display: flex;
+  gap: 0;
+}
+
+.step1-col {
+  flex: 1;
+  padding: 18px 20px;
+  border-right: 1px solid var(--color-border-light);
+}
+
+.step1-col:last-child { border-right: none; }
+
+.step1-col h3 {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--color-text-weak);
+  margin-bottom: 12px;
+}
+
+.list-view {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.list-item {
+  padding: 9px 14px;
+  border-bottom: 1px solid var(--color-border-light);
+  cursor: pointer;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: background 0.1s;
+  user-select: none;
+}
+
+.list-item:last-child { border-bottom: none; }
+.list-item:hover { background: var(--color-brand-light); }
+.list-item.selected {
+  background: var(--color-brand-light);
+  font-weight: 600;
+  color: var(--color-brand);
+}
+.list-item.selected::after {
+  content: "✓";
+  font-weight: 700;
+  color: var(--color-brand);
+}
+
+.hint-box {
+  margin-top: 10px;
+  padding: 9px 12px;
+  background: #f8f8f8;
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius);
+  font-size: 12px;
+  color: var(--color-text-weak);
+  line-height: 1.5;
+}
+
+.step1-col-locked { background: #fafafa; }
+.step1-lock-msg { font-size: 11px; color: var(--color-text-placeholder); margin-bottom: 10px; display: flex; align-items: center; gap: 5px; }
+
+/* Progressive form */
+.pf-section {
+  margin-bottom: 0;
+  border-bottom: 1px solid var(--color-border-light);
+  padding-bottom: 20px;
+  margin-bottom: 20px;
+  transition: all 0.2s;
+}
+
+.pf-section:last-child { border-bottom: none; margin-bottom: 8px; }
+
+.pf-hidden { display: none; }
+
+.pf-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--color-text-weak);
+  margin-bottom: 12px;
+}
+
+.pf-list {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  max-width: 400px;
+}
+
+.pf-list-item {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--color-border-light);
+  cursor: pointer;
+  font-size: 13px;
+  transition: background 0.1s;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.pf-list-item:last-child { border-bottom: none; }
+.pf-list-item:hover { background: var(--color-brand-light); color: var(--color-brand); }
+.pf-list-item:hover::after { content: "→"; color: var(--color-brand); font-weight: 700; }
+
+.pf-confirmed {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  padding: 2px 0;
+}
+
+.pf-confirmed-value { font-weight: 600; color: var(--color-text); }
+.pf-confirmed-meta { color: var(--color-text-weak); font-size: 12px; }
+
+.pf-change-btn {
+  margin-left: auto;
+  background: none;
+  border: none;
+  color: var(--color-brand);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+}
+
+.pf-change-btn:hover { color: var(--color-brand-dark); }
+
+.upload-zone {
+  margin-top: 12px;
+  border: 2px dashed var(--color-border);
+  border-radius: var(--radius);
+  padding: 20px 16px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+  font-size: 13px;
+  color: var(--color-text-weak);
+}
+
+.upload-zone:hover { border-color: var(--color-brand); background: var(--color-brand-light); }
+.upload-zone .icon { font-size: 28px; margin-bottom: 6px; }
+.upload-zone .or { font-size: 11px; margin: 4px 0; }
+.upload-zone .uploaded { color: var(--color-success); font-weight: 600; }
+
+/* ---- STEP 2 ---- */
+.step2-layout {
+  display: flex;
+  min-height: 400px;
+}
+
+.step2-main {
+  flex: 1;
+  border-right: 1px solid var(--color-border-light);
+  overflow: hidden;
+}
+
+.step2-preview {
+  width: 180px;
+  flex-shrink: 0;
+  background: var(--color-bg-header);
+  padding: 14px;
+  overflow-y: auto;
+  border-left: 1px solid var(--color-border-light);
+}
+
+.step2-preview h4 {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--color-text-weak);
+  margin-bottom: 14px;
+  border-bottom: 1px solid var(--color-border-light);
+  padding-bottom: 8px;
+}
+
+.preview-field { margin-bottom: 12px; }
+.preview-field .lbl { font-size: 10px; color: var(--color-text-weak); margin-bottom: 1px; }
+.preview-field .val { font-size: 13px; font-weight: 600; color: var(--color-text); }
+.preview-field .val.unmapped { color: var(--color-text-weak); font-style: italic; font-weight: 400; font-size: 11px; }
+
+/* TOOLBAR */
+.toolbar {
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--color-border-light);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--color-bg-header);
+  flex-wrap: wrap;
+}
+
+.toolbar-tabs {
+  display: flex;
+  gap: 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.toolbar-tab {
+  padding: 5px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  background: white;
+  border: none;
+  border-right: 1px solid var(--color-border);
+  color: var(--color-brand);
+  transition: background 0.1s;
+}
+
+.toolbar-tab:last-child { border-right: none; }
+.toolbar-tab.active { background: var(--color-brand); color: white; }
+.toolbar-tab:hover:not(.active) { background: var(--color-brand-light); }
+
+.search-input {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 5px 10px;
+  font-size: 12px;
+  width: 150px;
+  outline: none;
+  background: white;
+  color: var(--color-text);
+}
+
+.search-input:focus { border-color: var(--color-brand); box-shadow: 0 0 0 2px rgba(1,118,211,0.15); }
+
+/* Global checkbox/radio accent fix */
+input[type="checkbox"], input[type="radio"] {
+  accent-color: var(--color-brand);
+}
+
+.save-btn {
+  margin-left: auto;
+  font-size: 12px;
+  padding: 5px 14px;
+}
+
+.toolbar-file {
+  font-size: 12px;
+  color: var(--color-text-weak);
+  padding-left: 10px;
+  border-left: 1px solid var(--color-border-light);
+}
+
+.toolbar-file strong { color: var(--color-text); }
+
+/* MAPPING TABLE */
+.mapping-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.mapping-table thead th {
+  padding: 9px 14px;
+  background: var(--color-bg-header);
+  border-bottom: 2px solid var(--color-border-light);
+  text-align: left;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--color-text-weak);
+  white-space: nowrap;
+}
+
+.mapping-table thead th.col-yours {
+  background: white !important;
+  color: var(--color-text-weak);
+  border-bottom: 2px solid var(--color-border-light);
+}
+
+.mapping-table thead th.col-sf {
+  background: #daeaf7 !important;
+  color: #0c4a7a;
+  border-bottom: 2px solid #b8d4ec;
+}
+
+.mapping-table tbody td.col-yours {
+  background: white;
+}
+
+.mapping-table tbody td.col-sf {
+  background: #f0f7ff;
+}
+
+#overlay .overlay-item { background: white; }
+#overlay .overlay-item.selected { background: var(--color-brand); }
+
+.mapping-table tbody tr.row-unmapped td.col-yours {
+  background: #fef5e0;
+}
+
+.mapping-table tbody tr.row-unmapped td.col-sf {
+  background: #fef5e0;
+}
+
+.mapping-table tbody td:first-child,
+.mapping-table thead th:first-child {
+  border-right: 1px solid var(--color-border-light);
+  background: white !important;
+}
+
+.mapping-table tbody tr { border-bottom: 1px solid var(--color-border-light); }
+.mapping-table tbody tr:last-child { border-bottom: none; }
+.mapping-table tbody tr:hover td { background: #fafafa; }
+.mapping-table tbody td { padding: 9px 14px; vertical-align: middle; }
+
+.row-unmapped td { background: var(--color-unmapped-bg); }
+.row-unmapped:hover td { background: #fde8b0 !important; }
+
+.field-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.badge-mapped { background: var(--color-mapped-bg); color: var(--color-mapped-text); }
+.badge-unmapped { background: var(--color-unmapped-bg); color: var(--color-unmapped-text); }
+.badge-ignored { background: var(--color-ignored-bg); color: var(--color-ignored-text); }
+
+.action-link {
+  color: var(--color-brand);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 0;
+  text-decoration: none;
+}
+
+.action-link:hover { text-decoration: underline; }
+.action-link.weak { color: var(--color-text-weak); font-weight: 400; }
+
+/* MOBILE CARDS */
+.mobile-cards { display: none; }
+
+.m-card {
+  border-bottom: 1px solid var(--color-border-light);
+  padding: 12px 16px;
+}
+
+.m-card.unmapped { background: var(--color-unmapped-bg); }
+
+.m-card-row {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  margin-bottom: 6px;
+}
+
+.m-col { flex: 1; }
+.m-col-label { font-size: 10px; font-weight: 700; text-transform: uppercase; color: var(--color-text-weak); margin-bottom: 2px; }
+.m-col-val { font-size: 13px; }
+.m-arrow { color: var(--color-text-weak); align-self: center; flex-shrink: 0; font-size: 14px; }
+
+.m-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 6px;
+}
+
+/* ---- OVERLAY ---- */
+.overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(3,45,96,0.5);
+  z-index: 500;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.overlay.open { display: flex; }
+
+.overlay-panel {
+  background: white;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-overlay);
+  width: 100%;
+  max-width: 420px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.overlay-header { padding: 16px 20px; border-bottom: 1px solid var(--color-border-light); }
+.overlay-header h3 { font-size: 15px; font-weight: 700; }
+.overlay-header p { font-size: 12px; color: var(--color-text-weak); margin-top: 3px; }
+
+.overlay-search { padding: 10px 16px; border-bottom: 1px solid var(--color-border-light); }
+.overlay-search input {
+  width: 100%;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 7px 10px;
+  font-size: 13px;
+  outline: none;
+}
+
+.overlay-list { flex: 1; overflow-y: auto; }
+.overlay-item {
+  border-bottom: 1px solid var(--color-border-light);
+  user-select: none;
+  transition: background 0.1s;
+}
+
+.overlay-item:last-child { border-bottom: none; }
+
+.overlay-item:hover:not(.selected) {
+  background: var(--color-brand-light);
+}
+
+.overlay-item.selected {
+  background: var(--color-brand);
+}
+
+.overlay-footer {
+  padding: 12px 16px;
+  border-top: 1px solid var(--color-border-light);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.overlay-footer .opt { flex: 1; font-size: 12px; display: flex; align-items: center; gap: 6px; cursor: pointer; }
+
+/* ---- STEP 3 ---- */
+.review-section {
+  padding: 18px 20px;
+  border-bottom: 1px solid var(--color-border-light);
+}
+
+.review-section:last-child { border-bottom: none; }
+
+.review-section h3 {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--color-text-weak);
+  margin-bottom: 14px;
+}
+
+.review-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 14px;
+}
+
+.review-item label { font-size: 11px; color: var(--color-text-weak); display: block; margin-bottom: 3px; }
+.review-item .val { font-size: 14px; font-weight: 600; }
+
+.summary-pills {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+
+.summary-pill {
+  background: var(--color-bg);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius);
+  padding: 12px 18px;
+  text-align: center;
+  min-width: 80px;
+}
+
+.summary-pill .num { font-size: 24px; font-weight: 700; }
+.summary-pill .num.green { color: var(--color-success); }
+.summary-pill .num.orange { color: var(--color-warning); }
+.summary-pill .num.gray { color: var(--color-text-weak); }
+.summary-pill .lbl { font-size: 11px; color: var(--color-text-weak); margin-top: 2px; }
+
+.warning-box {
+  background: var(--color-warning-bg);
+  border: 1px solid #f0c04a;
+  border-radius: var(--radius);
+  padding: 10px 14px;
+  font-size: 12px;
+  color: #7a5000;
+}
+
+.option-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 10px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.option-row input { margin-top: 2px; flex-shrink: 0; cursor: pointer; }
+
+/* ---- SUCCESS ---- */
+.success-wrap {
+  display: flex;
+  justify-content: center;
+  padding: 24px 0;
+}
+
+.success-card {
+  background: white;
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-card);
+  padding: 48px 40px;
+  text-align: center;
+  max-width: 520px;
+  width: 100%;
+}
+
+.success-icon {
+  width: 64px;
+  height: 64px;
+  background: var(--color-mapped-bg);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 18px;
+  font-size: 30px;
+}
+
+.success-card h2 { font-size: 22px; font-weight: 700; margin-bottom: 6px; }
+.success-card p { color: var(--color-text-weak); margin-bottom: 24px; font-size: 13px; }
+
+.success-stats {
+  display: flex;
+  justify-content: center;
+  gap: 0;
+  margin: 20px 0 28px;
+  width: 100%;
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.success-stat {
+  flex: 1;
+  padding: 16px 8px;
+  border-right: 1px solid var(--color-border-light);
+  text-align: center;
+}
+
+.success-stat:last-child { border-right: none; }
+
+.success-stat .num { font-size: 30px; font-weight: 700; color: var(--color-success); }
+.success-stat .num.warn { color: var(--color-warning); }
+.success-stat .num.err { color: var(--color-error); }
+.success-stat .lbl { font-size: 12px; color: var(--color-text-weak); }
+
+/* ---- FOOTER NAV ---- */
+.footer-nav {
+  background: white;
+  border-top: 1px solid var(--color-border-light);
+  padding: 12px 24px;
+  display: none;
+  justify-content: flex-end;
+  gap: 10px;
+  position: sticky;
+  bottom: 0;
+  box-shadow: 0 -2px 8px rgba(0,0,0,0.06);
+  z-index: 10;
+}
+
+/* ---- RESPONSIVE ---- */
+.faq-accordion {
+  margin-top: 8px;
+  max-width: 680px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.faq-item {
+  border-bottom: 1px solid var(--color-border-light);
+}
+
+.faq-item:first-child {
+  border-top: 1px solid var(--color-border-light);
+}
+
+.faq-question {
+  width: 100%;
+  background: none;
+  border: none;
+  text-align: left;
+  padding: 14px 4px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  transition: color 0.15s;
+}
+
+.faq-question:hover { color: var(--color-brand); }
+
+.faq-chevron {
+  flex-shrink: 0;
+  transition: transform 0.2s;
+  color: var(--color-text-weak);
+}
+
+.faq-item.open .faq-chevron { transform: rotate(180deg); }
+
+.faq-answer {
+  display: none;
+  padding: 0 4px 14px;
+  font-size: 13px;
+  color: var(--color-text-weak);
+  line-height: 1.6;
+}
+
+.faq-item.open .faq-answer { display: block; }
+
+@media (max-width: 480px) {
+  .main { padding: 12px; }
+  .step1-sections { flex-direction: column; }
+  .step1-col { border-right: none; border-bottom: 1px solid var(--color-border-light); padding: 14px 16px; }
+  .step1-col:last-child { border-bottom: none; }
+  .step2-preview { display: none; }
+  .step2-main { border-right: none; }
+  .mapping-table { display: none; }
+  .mobile-cards { display: block; }
+  .toolbar-file { display: none; }
+  .step-icons { gap: 0; }
+  .step-icon-connector { display: none; }
+  .landing-bottom { flex-direction: column; }
+  .landing-video { width: 100%; height: 120px; }
+  .review-grid { grid-template-columns: 1fr 1fr; }
+  .footer-nav { padding: 10px 16px; }
+}
+</style>
+</head>
+<body>
+
+<header class="app-header">
+  <div class="sf-logo">sales<strong>force</strong></div>
+  <span class="app-header-title">Data Import Wizard</span>
+  <a href="#" class="header-help">Help & Training</a>
+</header>
+
+<div class="progress-bar" id="progressBar">
+  <div class="progress-steps">
+    <div class="progress-step-wrap">
+      <div class="progress-dot active" id="dot0">1</div>
+      <div class="progress-label active" id="lbl0">Upload your CSV</div>
+    </div>
+    <div class="progress-connector" id="conn0"></div>
+    <div class="progress-step-wrap">
+      <div class="progress-dot" id="dot1">2</div>
+      <div class="progress-label" id="lbl1">Edit Field Mapping</div>
+    </div>
+    <div class="progress-connector" id="conn1"></div>
+    <div class="progress-step-wrap">
+      <div class="progress-dot" id="dot2">3</div>
+      <div class="progress-label" id="lbl2">Start Import</div>
+    </div>
+  </div>
+</div>
+
+<main class="main">
+
+<!-- ===== LANDING ===== -->
+<div class="page active" id="page-landing">
+  <div class="landing-top">
+    <h1>Data Import Wizard</h1>
+    <div class="page-help" style="display:flex; align-items:center; gap:12px; position:relative;">
+      <div style="position:relative;">
+        <span id="feedbackLink" onclick="toggleFeedback()" style="color:var(--color-brand); font-size:12px; cursor:pointer;">Feedback!</span>
+        <div id="feedbackPanel" style="display:none; position:absolute; left:0; top:28px; width:260px; background:white; border:1px solid var(--color-border); border-radius:var(--radius); box-shadow:0 4px 12px rgba(0,0,0,0.12); padding:14px 16px; z-index:50;">
+          <button onclick="toggleFeedback()" style="position:absolute; top:8px; right:10px; background:none; border:none; cursor:pointer; font-size:16px; color:var(--color-text-weak); line-height:1;">×</button>
+          <div id="feedbackForm">
+            <div style="font-weight:700; font-size:13px; margin-bottom:4px;">Rate this page</div>
+            <div style="font-size:12px; color:var(--color-text-weak); margin-bottom:10px;">How helpful was the Data Import Wizard?</div>
+            <div id="starRow" style="display:flex; gap:6px; margin-bottom:12px;"></div>
+            <textarea id="feedbackText" placeholder="Tell us more (optional)" style="width:100%; border:1px solid var(--color-border); border-radius:var(--radius); padding:7px 9px; font-size:12px; resize:none; height:64px; font-family:inherit; outline:none;"></textarea>
+            <div id="feedbackError" style="display:none; color:var(--color-error); font-size:11px; margin-top:4px;">Please select a star rating first.</div>
+            <button onclick="submitFeedback()" class="btn btn-brand" style="margin-top:10px; width:100%; justify-content:center; font-size:12px; padding:7px;">Submit</button>
+          </div>
+          <div id="feedbackThanks" style="display:none; text-align:center; padding:8px 0;">
+            <div style="font-size:22px; margin-bottom:6px;">⭐</div>
+            <div style="font-weight:700; font-size:13px; margin-bottom:4px;">Thanks for your feedback</div>
+            <div style="font-size:12px; color:var(--color-text-weak);">Your rating helps us improve the Data Import Wizard.</div>
+          </div>
+        </div>
+      </div>
+      <div style="position:relative;">
+        <span onclick="toggleHelp()" style="color:var(--color-brand); font-size:12px; cursor:pointer; display:flex; align-items:center; gap:4px;">
+          Help for this page
+          <span style="display:inline-flex; align-items:center; justify-content:center; width:16px; height:16px; border-radius:50%; border:1.5px solid var(--color-brand); font-size:10px; font-weight:700; line-height:1;">?</span>
+        </span>
+        <div id="helpTooltip" style="display:none; position:absolute; right:0; top:28px; width:280px; background:white; border:1px solid var(--color-border); border-radius:var(--radius); box-shadow:0 4px 12px rgba(0,0,0,0.12); padding:14px 16px; z-index:50; font-size:12px; line-height:1.6; color:var(--color-text);">
+          <div style="font-weight:700; margin-bottom:8px; font-size:13px;">About this page</div>
+          <p style="margin-bottom:8px;">The Data Import Wizard lets you import up to 50,000 records at a time using a CSV file. You can add new records, update existing ones, or do both in a single import.</p>
+          <p style="margin-bottom:8px;">To get started, you'll need a CSV file with your data. Column headers that match Salesforce field names will be mapped automatically.</p>
+          <p>For imports over 50,000 records, use <a href="#" style="color:var(--color-brand);">Data Loader</a> instead.</p>
+          <div style="margin-top:10px; padding-top:10px; border-top:1px solid var(--color-border-light);">
+            <a href="#" style="color:var(--color-brand); font-size:11px;">View full documentation →</a>
+          </div>
+          <button onclick="toggleHelp()" style="position:absolute; top:8px; right:10px; background:none; border:none; cursor:pointer; font-size:16px; color:var(--color-text-weak); line-height:1;">×</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="wizard-card">
+    <h2>Import your data in 3 easy steps</h2>
+    <div class="step-icons">
+      <div class="step-icon-wrap">
+        <div class="step-icon">
+          <i data-lucide="upload-cloud" style="width:40px;height:40px;stroke:#616161;stroke-width:1.5;fill:none;"></i>
+        </div>
+        <div class="step-icon-label">Upload a clean CSV file</div>
+      </div>
+      <div class="step-icon-connector">→</div>
+      <div class="step-icon-wrap">
+        <div class="step-icon">
+          <i data-lucide="arrow-left-right" style="width:40px;height:40px;stroke:#616161;stroke-width:1.5;fill:none;"></i>
+        </div>
+        <div class="step-icon-label">Match your fields to Salesforce</div>
+      </div>
+      <div class="step-icon-connector">→</div>
+      <div class="step-icon-wrap">
+        <div class="step-icon">
+          <i data-lucide="check" style="width:40px;height:40px;stroke:#616161;stroke-width:1.5;fill:none;"></i>
+        </div>
+        <div class="step-icon-label">Review and start your import</div>
+      </div>
+    </div>
+    <button class="btn btn-brand btn-lg" onclick="goTo(1)">Start Import</button>
+    <div style="margin-top:10px; font-size:12px; color:var(--color-text-weak);">or drag your CSV file here...</div>
+  </div>
+
+  <div style="max-width:680px; margin: 20px auto 6px; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.6px; color:var(--color-text-weak);">Frequently asked questions</div>
+  <div class="faq-accordion" id="faqAccordion"></div>
+</div>
+
+<!-- ===== STEP 1 ===== -->
+<div class="page" id="page-1">
+  <div class="card">
+    <div class="card-header">
+      <h2>Upload a clean CSV file</h2>
+      <a href="#" class="help-link">Help for this page</a>
+    </div>
+
+    <div style="padding: 24px 24px 8px;">
+
+      <!-- SECTION 1: Upload -->
+      <div class="pf-section" id="pf-upload">
+        <div class="pf-label">Your file</div>
+        <div class="pf-active" id="pf-upload-active">
+          <div class="upload-zone" id="uploadZone" onclick="simulateUpload()">
+            <i data-lucide="upload-cloud" style="width:32px;height:32px;stroke:#9e9e9e;stroke-width:1.5;fill:none;" aria-hidden="true"></i>
+            <div style="margin-top:8px; font-size:13px; color:var(--color-text-weak);">Drop your CSV here or <span style="color:var(--color-brand); cursor:pointer;">browse</span></div>
+            <div style="font-size:11px; color:var(--color-text-placeholder); margin-top:4px;">Supports .csv and .xls — up to 50,000 records</div>
+          </div>
+        </div>
+        <div class="pf-confirmed" id="pf-upload-confirmed" style="display:none;">
+          <i data-lucide="file-text" style="width:16px;height:16px;stroke:var(--color-success);stroke-width:2;fill:none;flex-shrink:0;" aria-hidden="true"></i>
+          <span class="pf-confirmed-value">LinkedInExport_Q4.csv</span>
+          <span class="pf-confirmed-meta">— 3,847 records</span>
+          <button class="pf-change-btn" onclick="resetFrom('upload')">Change</button>
+        </div>
+      </div>
+
+      <!-- SECTION 2: Object type -->
+      <div class="pf-section pf-hidden" id="pf-type">
+        <div class="pf-label">What type of records are these?</div>
+        <div class="pf-active" id="pf-type-active">
+          <div class="pf-list">
+            <div class="pf-list-item" onclick="confirmType('Accounts & Contacts')">
+              <div>
+                <div style="font-weight:600; margin-bottom:2px;">Accounts & Contacts</div>
+                <div style="font-size:12px; color:var(--color-text-weak);">Companies and the people who work there</div>
+              </div>
+            </div>
+            <div class="pf-list-item" onclick="confirmType('Leads')">
+              <div>
+                <div style="font-weight:600; margin-bottom:2px;">Leads</div>
+                <div style="font-size:12px; color:var(--color-text-weak);">New prospects you haven't qualified yet</div>
+              </div>
+            </div>
+            <div class="pf-list-item" onclick="confirmType('Solutions')">
+              <div>
+                <div style="font-weight:600; margin-bottom:2px;">Solutions</div>
+                <div style="font-size:12px; color:var(--color-text-weak);">Knowledge base articles and resolved cases</div>
+              </div>
+            </div>
+            <div class="pf-list-item" onclick="confirmType('Custom Objects')">
+              <div>
+                <div style="font-weight:600; margin-bottom:2px;">Custom Objects</div>
+                <div style="font-size:12px; color:var(--color-text-weak);">Data types unique to your Salesforce org</div>
+              </div>
+            </div>
+            <div class="pf-list-item" onclick="confirmType('Campaign Members')">
+              <div>
+                <div style="font-weight:600; margin-bottom:2px;">Campaign Members</div>
+                <div style="font-size:12px; color:var(--color-text-weak);">Contacts or leads tied to a marketing campaign</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="pf-confirmed" id="pf-type-confirmed" style="display:none;">
+          <i data-lucide="check-circle" style="width:16px;height:16px;stroke:var(--color-success);stroke-width:2;fill:none;flex-shrink:0;" aria-hidden="true"></i>
+          <span class="pf-confirmed-value" id="pf-type-value"></span>
+          <button class="pf-change-btn" onclick="resetFrom('type')">Change</button>
+        </div>
+      </div>
+
+      <!-- SECTION 3: What to do -->
+      <div class="pf-section pf-hidden" id="pf-action">
+        <div class="pf-label">What do you want to do with these records?</div>
+        <div class="pf-active" id="pf-action-active">
+          <div class="pf-list">
+            <div class="pf-list-item" onclick="confirmAction('Add these as new records')">
+              <div>
+                <div style="font-weight:600; margin-bottom:2px;">Add these as new records</div>
+                <div style="font-size:12px; color:var(--color-text-weak);">They don't exist in Salesforce yet</div>
+              </div>
+            </div>
+            <div class="pf-list-item" onclick="confirmAction('Update records I already have')">
+              <div>
+                <div style="font-weight:600; margin-bottom:2px;">Update records I already have</div>
+                <div style="font-size:12px; color:var(--color-text-weak);">Match and overwrite existing Salesforce records</div>
+              </div>
+            </div>
+            <div class="pf-list-item" onclick="confirmAction('Add new and update existing')">
+              <div>
+                <div style="font-weight:600; margin-bottom:2px;">Add new and update existing</div>
+                <div style="font-size:12px; color:var(--color-text-weak);">Handles both in a single import</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="pf-confirmed" id="pf-action-confirmed" style="display:none;">
+          <i data-lucide="check-circle" style="width:16px;height:16px;stroke:var(--color-success);stroke-width:2;fill:none;flex-shrink:0;" aria-hidden="true"></i>
+          <span class="pf-confirmed-value" id="pf-action-value"></span>
+          <button class="pf-change-btn" onclick="resetFrom('action')">Change</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ===== STEP 2 ===== -->
+<div class="page" id="page-2">
+  <div class="card">
+    <div class="card-header">
+      <h2 style="font-weight:400;">Match your fields to Salesforce: <strong style="font-weight:700; color:var(--color-text);">Accounts & Contacts</strong></h2>
+      <div style="position:relative;">
+        <span onclick="toggleStep2Help()" style="color:var(--color-brand); font-size:12px; cursor:pointer; display:flex; align-items:center; gap:4px;">
+          Help for this page
+          <span style="display:inline-flex; align-items:center; justify-content:center; width:16px; height:16px; border-radius:50%; border:1.5px solid var(--color-brand); font-size:10px; font-weight:700; line-height:1;">?</span>
+        </span>
+        <div id="step2HelpTooltip" style="display:none; position:absolute; right:0; top:28px; width:300px; background:white; border:1px solid var(--color-border); border-radius:var(--radius); box-shadow:0 4px 12px rgba(0,0,0,0.12); padding:14px 16px; z-index:50; font-size:12px; line-height:1.6; color:var(--color-text);">
+          <div style="font-weight:700; margin-bottom:8px; font-size:13px;">About field mapping</div>
+          <p style="margin-bottom:8px;">Your CSV columns are on the left. Salesforce fields are on the right. For your data to import correctly, each column needs to be matched to the right Salesforce field.</p>
+          <p style="margin-bottom:8px;"><strong style="font-weight:600;">Mapped</strong> — the column is connected to a Salesforce field and will import.</p>
+          <p style="margin-bottom:8px;"><strong style="font-weight:600;">Unmapped</strong> — no match found. That column's data will be skipped unless you map it manually.</p>
+          <p>Use <strong style="font-weight:600;">Map</strong> or <strong style="font-weight:600;">Change</strong> on any row to pick a different Salesforce field. You can also mark a column as "Do not import" if you want to exclude it.</p>
+          <div style="margin-top:10px; padding-top:10px; border-top:1px solid var(--color-border-light);">
+            <a href="#" style="color:var(--color-brand); font-size:11px;">View full documentation →</a>
+          </div>
+          <button onclick="toggleStep2Help()" style="position:absolute; top:8px; right:10px; background:none; border:none; cursor:pointer; font-size:16px; color:var(--color-text-weak); line-height:1;">×</button>
+        </div>
+      </div>
+    </div>
+
+    <div style="padding: 10px 16px 8px; background:#fafafa; border-bottom:1px solid var(--color-border-light); font-size:12px; color:var(--color-text-weak); display:flex; align-items:center; gap:6px;">
+      <i data-lucide="file-text" style="width:13px;height:13px;stroke:#9e9e9e;stroke-width:2;fill:none;" aria-hidden="true"></i>
+      <span>LinkedInExport_Q4.csv &nbsp;·&nbsp; 3,847 records &nbsp;·&nbsp; Accounts & Contacts &nbsp;·&nbsp; Adding as new records</span>
+    </div>
+
+    <div class="toolbar">
+      <div class="toolbar-tabs">
+        <button class="toolbar-tab active" onclick="filterFields('all',this)">All fields (8)</button>
+        <button class="toolbar-tab" onclick="filterFields('unmapped',this)">Unmapped (2)</button>
+      </div>
+
+      <div style="position:relative; display:flex; align-items:center;">
+        <i data-lucide="search" style="position:absolute; left:8px; width:13px;height:13px;stroke:#aeacaa;stroke-width:2;fill:none;" aria-hidden="true"></i>
+        <input type="text" class="search-input" placeholder="Find field" oninput="searchFields(this.value)" style="padding-left:26px;">
+      </div>
+
+      <div style="margin-left:auto; position:relative;">
+        <button class="save-mapping-disabled" id="saveMappingBtn" onmouseenter="showSaveTooltip()" onmouseleave="hideSaveTooltip()" style="display:flex; align-items:center; gap:6px; background:none; border:1px solid var(--color-border); border-radius:var(--radius); padding:5px 12px; font-size:12px; color:var(--color-text-placeholder); cursor:not-allowed; opacity:0.6;">
+          <i data-lucide="bookmark" style="width:13px;height:13px;stroke:currentColor;stroke-width:2;fill:none;" aria-hidden="true"></i>
+          Save mapping
+        </button>
+        <div id="saveTooltip" style="display:none; position:absolute; right:0; top:34px; width:220px; background:#333; color:white; font-size:11px; border-radius:var(--radius); padding:8px 10px; line-height:1.5; z-index:50;">
+          Coming soon — save this mapping to reuse on future imports of the same file format.
+          <div style="position:absolute; top:-5px; right:16px; width:0; height:0; border-left:5px solid transparent; border-right:5px solid transparent; border-bottom:5px solid #333;"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step2-layout">
+      <div class="step2-main">
+        <!-- Desktop table -->
+        <table class="mapping-table" id="mappingTable">
+          <thead>
+            <tr>
+              <th style="width:80px; background:white;"></th>
+              <th class="col-yours">Your Fields <span style="font-weight:400; opacity:0.7;">(CSV)</span></th>
+              <th class="col-sf">Salesforce Fields</th>
+            </tr>
+          </thead>
+          <tbody id="mappingBody"></tbody>
+        </table>
+        <!-- Mobile cards -->
+        <div class="mobile-cards" id="mobileCards"></div>
+      </div>
+
+      <!-- Record Preview Panel -->
+      <div class="step2-preview">
+        <h4>How your first record will look in Salesforce</h4>
+        <div id="previewPanel"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== STEP 3 ===== -->
+<div class="page" id="page-3">
+  <div class="card">
+
+    <!-- Header -->
+    <div class="card-header">
+      <h2 style="font-weight:400;">Review and <strong style="font-weight:700; color:var(--color-text);">start your import</strong></h2>
+      <a href="#" class="help-link">Help for this page</a>
+    </div>
+
+    <!-- 1. Confirmation sentence -->
+    <div style="padding: 28px 24px 24px; border-bottom: 1px solid var(--color-border-light);">
+      <p style="font-size:16px; line-height:1.8; color:var(--color-text);">
+        You're about to add <strong>3,847 new records</strong> to <strong>Accounts & Contacts</strong> from <strong>LinkedInExport_Q4.csv</strong>.
+      </p>
+      <p style="margin-top:10px; font-size:12px; color:var(--color-text-weak);">
+        Not right? <a href="#" class="help-link" onclick="goTo(1); return false;">Go back to Step 1</a>
+      </p>
+    </div>
+
+    <!-- 2. Import readiness -->
+    <div style="padding: 20px 24px; border-bottom: 1px solid var(--color-border-light);">
+      <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; color:var(--color-text-weak); margin-bottom:14px;">Import readiness</div>
+      <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
+        <i data-lucide="check-circle" style="width:15px;height:15px;stroke:var(--color-success);stroke-width:2;fill:none;flex-shrink:0;" aria-hidden="true"></i>
+        <span style="font-size:13px;"><strong>11 of 11 fields mapped</strong> — all columns will import into Salesforce.</span>
+      </div>
+      <div style="display:flex; align-items:center; gap:10px;">
+        <i data-lucide="check-circle" style="width:15px;height:15px;stroke:var(--color-success);stroke-width:2;fill:none;flex-shrink:0;" aria-hidden="true"></i>
+        <span style="font-size:13px; color:var(--color-text-weak);">No errors detected.</span>
+      </div>
+    </div>
+
+    <!-- 3. Import options -->
+    <div style="padding: 20px 24px; border-bottom: 1px solid var(--color-border-light);">
+      <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; color:var(--color-text-weak); margin-bottom:16px;">Before you import</div>
+
+      <label style="display:flex; align-items:flex-start; gap:12px; margin-bottom:16px; cursor:pointer;">
+        <input type="checkbox" checked style="margin-top:2px; flex-shrink:0;">
+        <div>
+          <div style="font-size:13px; font-weight:600; margin-bottom:2px;">Skip duplicate records</div>
+          <div style="font-size:12px; color:var(--color-text-weak);">If a record in your file already exists in Salesforce, it will be skipped rather than creating a duplicate.</div>
+        </div>
+      </label>
+
+      <label style="display:flex; align-items:flex-start; gap:12px; margin-bottom:16px; cursor:pointer;">
+        <input type="checkbox" checked style="margin-top:2px; flex-shrink:0;">
+        <div>
+          <div style="font-size:13px; font-weight:600; margin-bottom:2px;">Trigger workflow rules</div>
+          <div style="font-size:12px; color:var(--color-text-weak);">Any Salesforce automation tied to new records will run on import. Uncheck this to import silently.</div>
+        </div>
+      </label>
+
+      <label style="display:flex; align-items:flex-start; gap:12px; cursor:pointer;">
+        <input type="checkbox" checked style="margin-top:2px; flex-shrink:0;">
+        <div>
+          <div style="font-size:13px; font-weight:600; margin-bottom:2px;">Email me when it's done</div>
+          <div style="font-size:12px; color:var(--color-text-weak);">You'll get a summary with the number of records imported, skipped, and any errors.</div>
+        </div>
+      </label>
+    </div>
+
+    <!-- 4. Closing padding -->
+    <div style="padding-bottom: 8px;"></div>
+
+  </div>
+</div>
+
+<!-- ===== SUCCESS ===== -->
+<div class="page" id="page-success">
+  <div class="success-wrap">
+    <div class="success-card">
+      <div class="success-icon">✓</div>
+      <h2>Import Complete</h2>
+      <p>3,829 records are now in Accounts & Contacts.</p>
+      <div class="success-stats">
+        <div class="success-stat">
+          <div class="num">3,829</div>
+          <div class="lbl">Records imported</div>
+        </div>
+        <div class="success-stat">
+          <div class="num warn">18</div>
+          <div class="lbl">Skipped (duplicates)</div>
+        </div>
+        <div class="success-stat">
+          <div class="num err">0</div>
+          <div class="lbl">Errors</div>
+        </div>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:10px; align-items:center; width:100%;">
+        <button class="btn btn-brand" style="width:100%; max-width:280px; justify-content:center;" onclick="goTo('history')">View Imported Records</button>
+        <button class="btn btn-neutral" style="width:100%; max-width:280px; justify-content:center;" onclick="goTo('landing')">Start Another Import</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== IMPORT HISTORY ===== -->
+<div class="page" id="page-history" style="margin: -20px -24px; min-height: 100vh; background: #f3f3f3;">
+
+  <!-- SF Lightning Nav -->
+  <div style="background:#032d60; height:48px; display:flex; align-items:center; padding:0 16px; gap:16px;">
+    <span style="color:white; font-size:18px; font-weight:300;">sales<strong style="font-weight:700;">force</strong></span>
+    <div style="height:24px; width:1px; background:rgba(255,255,255,0.3); margin:0 4px;"></div>
+    <div style="display:flex; gap:0; overflow-x:auto;">
+      <span style="color:rgba(255,255,255,0.6); font-size:12px; padding:0 12px; cursor:pointer;">Home</span>
+      <span style="color:rgba(255,255,255,0.6); font-size:12px; padding:0 12px; cursor:pointer;">Contacts</span>
+      <span style="color:rgba(255,255,255,0.6); font-size:12px; padding:0 12px; cursor:pointer;">Accounts</span>
+      <span style="color:rgba(255,255,255,0.6); font-size:12px; padding:0 12px; cursor:pointer;">Leads</span>
+      <span style="color:rgba(255,255,255,0.6); font-size:12px; padding:0 12px; cursor:pointer;">Reports</span>
+    </div>
+    <span style="color:rgba(255,255,255,0.6); font-size:12px; margin-left:auto; cursor:pointer;">Help & Training</span>
+  </div>
+
+  <!-- Page header -->
+  <div style="background:white; border-bottom:1px solid #e5e5e5; padding:16px 24px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;">
+    <div>
+      <div style="font-size:11px; color:#706e6b; margin-bottom:2px; text-transform:uppercase; letter-spacing:0.4px;">Setup · Data Management</div>
+      <h1 style="font-size:20px; font-weight:700; color:#181818;">Import History</h1>
+    </div>
+    <button class="btn btn-brand" onclick="goTo('landing')" style="display:flex; align-items:center; gap:6px;">
+      <i data-lucide="upload-cloud" style="width:14px;height:14px;stroke:white;stroke-width:2;fill:none;" aria-hidden="true"></i>
+      Start New Import
+    </button>
+  </div>
+
+  <!-- Table area -->
+  <div style="padding:20px 24px;">
+    <div style="background:white; border:1px solid #e5e5e5; border-radius:6px; box-shadow:0 2px 8px rgba(0,0,0,0.06); overflow:hidden;">
+
+      <!-- Table toolbar -->
+      <div style="padding:12px 16px; border-bottom:1px solid #e5e5e5; display:flex; align-items:center; gap:10px; background:#fafafa; flex-wrap:wrap;">
+        <span style="font-size:13px; font-weight:700; color:#181818;">10 items</span>
+        <div style="position:relative; display:flex; align-items:center; margin-left:8px;">
+          <i data-lucide="search" style="position:absolute; left:8px; width:13px;height:13px;stroke:#aeacaa;stroke-width:2;fill:none;" aria-hidden="true"></i>
+          <input type="text" placeholder="Search imports" style="border:1px solid #c9c7c5; border-radius:4px; padding:5px 10px 5px 26px; font-size:12px; width:180px; outline:none;">
+        </div>
+        <div style="margin-left:auto; display:flex; gap:8px;">
+          <button style="background:none; border:1px solid #c9c7c5; border-radius:4px; padding:5px 12px; font-size:12px; color:#0176d3; cursor:pointer; font-weight:600;">
+            <i data-lucide="download" style="width:12px;height:12px;stroke:currentColor;stroke-width:2;fill:none;vertical-align:-1px;" aria-hidden="true"></i>
+            Export
+          </button>
+        </div>
+      </div>
+
+      <!-- Table -->
+      <div style="overflow-x:auto;">
+        <table style="width:100%; border-collapse:collapse; font-size:12px;">
+          <thead>
+            <tr style="background:#fafafa; border-bottom:2px solid #e5e5e5;">
+              <th style="padding:10px 16px; text-align:left; font-weight:700; color:#706e6b; font-size:11px; text-transform:uppercase; letter-spacing:0.4px; white-space:nowrap;">Date & Time</th>
+              <th style="padding:10px 16px; text-align:left; font-weight:700; color:#706e6b; font-size:11px; text-transform:uppercase; letter-spacing:0.4px; white-space:nowrap;">File Name</th>
+              <th style="padding:10px 16px; text-align:left; font-weight:700; color:#706e6b; font-size:11px; text-transform:uppercase; letter-spacing:0.4px; white-space:nowrap;">Object</th>
+              <th style="padding:10px 16px; text-align:left; font-weight:700; color:#706e6b; font-size:11px; text-transform:uppercase; letter-spacing:0.4px; white-space:nowrap;">Status</th>
+              <th style="padding:10px 16px; text-align:right; font-weight:700; color:#706e6b; font-size:11px; text-transform:uppercase; letter-spacing:0.4px; white-space:nowrap;">Imported</th>
+              <th style="padding:10px 16px; text-align:right; font-weight:700; color:#706e6b; font-size:11px; text-transform:uppercase; letter-spacing:0.4px; white-space:nowrap;">Skipped</th>
+              <th style="padding:10px 16px; text-align:right; font-weight:700; color:#706e6b; font-size:11px; text-transform:uppercase; letter-spacing:0.4px; white-space:nowrap;">Errors</th>
+              <th style="padding:10px 16px; text-align:left; font-weight:700; color:#706e6b; font-size:11px; text-transform:uppercase; letter-spacing:0.4px; white-space:nowrap;">Run By</th>
+              <th style="padding:10px 16px; text-align:left; font-weight:700; color:#706e6b; font-size:11px; text-transform:uppercase; letter-spacing:0.4px; white-space:nowrap;">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="historyBody"></tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      <div style="padding:12px 16px; border-top:1px solid #e5e5e5; display:flex; align-items:center; justify-content:space-between; background:#fafafa;">
+        <span style="font-size:12px; color:#706e6b;">Showing 1–10 of 10</span>
+        <div style="display:flex; gap:4px;">
+          <button style="border:1px solid #c9c7c5; background:white; border-radius:4px; padding:4px 10px; font-size:12px; color:#aeacaa; cursor:not-allowed;">← Prev</button>
+          <button style="border:1px solid #c9c7c5; background:white; border-radius:4px; padding:4px 10px; font-size:12px; color:#aeacaa; cursor:not-allowed;">Next →</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+</main>
+
+<footer class="footer-nav" id="footerNav" style="flex-direction:column; align-items:stretch; gap:0;">
+  <div style="display:flex; justify-content:flex-end; gap:10px; width:100%;">
+    <button class="btn btn-neutral" onclick="goTo('landing')">Cancel</button>
+    <button class="btn btn-neutral" id="btnPrev" onclick="prevStep()" style="display:none">Previous</button>
+    <button class="btn btn-brand" id="btnNext" onclick="nextStep()">Next</button>
+  </div>
+  <div id="footerWarning" style="display:none; text-align:right; margin-top:6px; font-size:11px; color:#ba0517; font-weight:500;">
+    Once started, this import cannot be undone.
+  </div>
+</footer>
+
+<!-- OVERLAY -->
+<div class="overlay" id="overlay" onclick="handleOverlayClick(event)">
+  <div class="overlay-panel" id="overlayPanel" style="max-width:380px;">
+
+    <!-- Header — instruction with field on next line -->
+    <div style="background:white; border-bottom:1px solid var(--color-border-light); padding:16px 20px; border-radius:6px 6px 0 0; display:flex; align-items:flex-start; justify-content:space-between; gap:12px;">
+      <div>
+        <div style="font-size:13px; color:var(--color-text-weak);">Select the Salesforce field to map to:</div>
+        <div style="font-size:17px; font-weight:700; color:var(--color-text); margin-top:3px;" id="overlayFieldRepeat"></div>
+      </div>
+      <button onclick="closeOverlay()" style="background:none; border:none; cursor:pointer; color:var(--color-text-weak); font-size:20px; line-height:1; padding:0; flex-shrink:0; margin-top:2px;">×</button>
+    </div>
+
+    <!-- Field list — scrollable, includes skip as last item -->
+    <div class="overlay-list" id="overlayList" style="scrollbar-color:#c9c7c5 #f3f3f3; scrollbar-width:thin;"></div>
+
+    <!-- Actions -->
+    <div style="padding:12px 20px; display:flex; justify-content:flex-end; gap:10px; border-top:1px solid var(--color-border-light); background:white; border-radius:0 0 6px 6px;">
+      <button class="btn btn-neutral" onclick="closeOverlay()">Cancel</button>
+      <button class="btn btn-brand" onclick="applyMapping()">Confirm</button>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const SF_FIELDS = [
+  { name:"First Name",     example:"Maria" },
+  { name:"Last Name",      example:"Chen" },
+  { name:"Nickname",       example:"Mac" },
+  { name:"Suffix",         example:"Jr., Sr., III" },
+  { name:"Email Address",  example:"m.chen@acme.com" },
+  { name:"Phone Number",   example:"(415) 555-0192" },
+  { name:"Mobile",         example:"(415) 555-8823" },
+  { name:"Account Name",   example:"Acme Corp" },
+  { name:"Title",          example:"VP of Sales" },
+  { name:"Department",     example:"Marketing" },
+  { name:"Industry",       example:"Technology" },
+  { name:"Lead Source",    example:"Web, Trade Show" },
+  { name:"Mailing Street", example:"123 Main St" },
+  { name:"Mailing City",   example:"San Francisco" },
+  { name:"Mailing State",  example:"CA" },
+  { name:"Mailing Zip",    example:"94105" },
+  { name:"Description",    example:"Met at Dreamforce 2026" },
+  { name:"Contact Owner",  example:"Isaak Hayes" },
+  { name:"Created Date",   example:"10/01/2026" },
+  { name:"Last Modified",  example:"10/01/2026" },
+];
+
+let fields = [
+  { csv:"First Name",   sf:"First Name",    status:"mapped",   sample:"Isaak" },
+  { csv:"Last Name",    sf:"Last Name",     status:"mapped",   sample:"Isaak" },
+  { csv:"Sir Name",     sf:null,            status:"unmapped", sample:"Sir Name" },
+  { csv:"NIckname",     sf:"Nickname",      status:"mapped",   sample:"Nickname" },
+  { csv:"Company",      sf:"Account Name",  status:"mapped",   sample:"Big Company Inc." },
+  { csv:"Industry",     sf:null,            status:"unmapped", sample:"Online Apparel" },
+  { csv:"Title",        sf:"Title",         status:"mapped",   sample:"Isaak" },
+  { csv:"Department",   sf:"Department",    status:"mapped",   sample:"HR" },
+  { csv:"Email Address",sf:"Email Address", status:"mapped",   sample:"Isaakh@bigcompany.com" },
+  { csv:"Phone Number", sf:null,            status:"unmapped", sample:"(323) 510-2280" },
+  { csv:"Address",      sf:"Mailing Street",status:"mapped",   sample:"1234 Big Company Dr., American City, Ca" },
+];
+
+let currentStep = 'landing';
+let editIdx = null;
+let filterMode = 'all';
+let searchQ = '';
+
+function goTo(step) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  const pb = document.getElementById('progressBar');
+  const fn = document.getElementById('footerNav');
+
+  if (step === 'landing') {
+    document.getElementById('page-landing').classList.add('active');
+    pb.style.display = 'none';
+    fn.style.display = 'none';
+  } else if (step === 'success') {
+    document.getElementById('page-success').classList.add('active');
+    pb.style.display = 'none';
+    fn.style.display = 'none';
+  } else if (step === 'history') {
+    document.getElementById('page-history').classList.add('active');
+    pb.style.display = 'none';
+    fn.style.display = 'none';
+    lucide.createIcons();
+  } else {
+    document.getElementById('page-' + step).classList.add('active');
+    pb.style.display = 'block';
+    fn.style.display = 'flex';
+    setProgress(step);
+    updateFooter(step);
+    if (step === 2) { renderMapping(); renderPreview(); }
+  }
+  currentStep = step;
+  window.scrollTo(0, 0);
+}
+
+function nextStep() {
+  if (currentStep === 1) goTo(2);
+  else if (currentStep === 2) goTo(3);
+  else if (currentStep === 3) {
+    const btn = document.getElementById('btnNext');
+    btn.textContent = 'Importing…';
+    btn.disabled = true;
+    setTimeout(() => { btn.textContent = 'Start Import'; btn.disabled = false; goTo('success'); }, 1200);
+  }
+}
+
+function prevStep() {
+  if (currentStep === 2) goTo(1);
+  else if (currentStep === 3) goTo(2);
+}
+
+function setProgress(step) {
+  [0,1,2].forEach(i => {
+    const dot = document.getElementById('dot' + i);
+    const lbl = document.getElementById('lbl' + i);
+    const conn = document.getElementById('conn' + i);
+    dot.className = 'progress-dot';
+    lbl.className = 'progress-label';
+    if (conn) conn.className = 'progress-connector';
+    if (i + 1 < step) {
+      dot.classList.add('done'); dot.textContent = '✓';
+      lbl.classList.add('done');
+      if (conn) conn.classList.add('done');
+    } else if (i + 1 === step) {
+      dot.classList.add('active'); dot.textContent = i + 1;
+      lbl.classList.add('active');
+    } else {
+      dot.textContent = i + 1;
+    }
+  });
+}
+
+function updateFooter(step) {
+  document.getElementById('btnPrev').style.display = step > 1 ? 'inline-flex' : 'none';
+  const next = document.getElementById('btnNext');
+  const warning = document.getElementById('footerWarning');
+  if (step === 3) {
+    next.style.display = 'inline-flex';
+    next.textContent = 'Start Import';
+    next.className = 'btn btn-success';
+    next.style.padding = '11px 28px';
+    next.style.fontSize = '14px';
+    warning.style.display = 'block';
+  } else {
+    next.style.display = 'inline-flex';
+    next.textContent = 'Next';
+    next.className = 'btn btn-brand';
+    next.style.padding = '';
+    next.style.fontSize = '';
+    warning.style.display = 'none';
+  }
+}
+
+let selectedStar = 0;
+
+function buildStars() {
+  const row = document.getElementById('starRow');
+  if (!row || row.children.length) return;
+  for (let n = 1; n <= 5; n++) {
+    const s = document.createElement('span');
+    s.dataset.star = n;
+    s.textContent = '★';
+    s.setAttribute('aria-label', n + ' star');
+    s.style.cssText = 'font-size:24px; cursor:pointer; color:#d4d4d4; transition:color 0.1s;';
+    s.onclick = () => selectStar(n);
+    row.appendChild(s);
+  }
+}
+
+function toggleFeedback() {
+  const p = document.getElementById('feedbackPanel');
+  p.style.display = p.style.display === 'none' ? 'block' : 'none';
+  if (p.style.display === 'block') {
+    buildStars();
+    selectedStar = 0;
+    document.querySelectorAll('#starRow span').forEach(s => s.style.color = '#d4d4d4');
+    document.getElementById('feedbackText').value = '';
+    document.getElementById('feedbackError').style.display = 'none';
+    document.getElementById('feedbackForm').style.display = 'block';
+    document.getElementById('feedbackThanks').style.display = 'none';
+  }
+}
+
+function selectStar(n) {
+  selectedStar = n;
+  document.getElementById('feedbackError').style.display = 'none';
+  document.querySelectorAll('#starRow span').forEach(s => {
+    s.style.color = parseInt(s.dataset.star) <= n ? '#f5a623' : '#d4d4d4';
+  });
+}
+
+function submitFeedback() {
+  if (!selectedStar) {
+    document.getElementById('feedbackError').style.display = 'block';
+    return;
+  }
+  document.getElementById('feedbackForm').style.display = 'none';
+  document.getElementById('feedbackThanks').style.display = 'block';
+  setTimeout(() => toggleFeedback(), 2500);
+}
+
+function showSaveTooltip() {
+  document.getElementById('saveTooltip').style.display = 'block';
+}
+function hideSaveTooltip() {
+  document.getElementById('saveTooltip').style.display = 'none';
+}
+
+function toggleHelp() {
+  const t = document.getElementById('helpTooltip');
+  t.style.display = t.style.display === 'none' ? 'block' : 'none';
+}
+
+function toggleStep2Help() {
+  const t = document.getElementById('step2HelpTooltip');
+  t.style.display = t.style.display === 'none' ? 'block' : 'none';
+}
+
+function pickItem(el, group) {
+  el.closest('.list-view').querySelectorAll('.list-item').forEach(i => i.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+function simulateUpload() {
+  document.getElementById('pf-upload-active').style.display = 'none';
+  document.getElementById('pf-upload-confirmed').style.display = 'flex';
+  document.getElementById('pf-type').classList.remove('pf-hidden');
+  lucide.createIcons();
+}
+
+function confirmType(value) {
+  document.getElementById('pf-type-active').style.display = 'none';
+  document.getElementById('pf-type-value').textContent = value;
+  document.getElementById('pf-type-confirmed').style.display = 'flex';
+  document.getElementById('pf-action').classList.remove('pf-hidden');
+  lucide.createIcons();
+}
+
+function confirmAction(value) {
+  document.getElementById('pf-action-active').style.display = 'none';
+  document.getElementById('pf-action-value').textContent = value;
+  document.getElementById('pf-action-confirmed').style.display = 'flex';
+  lucide.createIcons();
+}
+
+function resetFrom(section) {
+  if (section === 'upload') {
+    document.getElementById('pf-upload-active').style.display = 'block';
+    document.getElementById('pf-upload-confirmed').style.display = 'none';
+    document.getElementById('pf-type').classList.add('pf-hidden');
+    document.getElementById('pf-type-active').style.display = 'block';
+    document.getElementById('pf-type-confirmed').style.display = 'none';
+    document.getElementById('pf-action').classList.add('pf-hidden');
+    document.getElementById('pf-action-active').style.display = 'block';
+    document.getElementById('pf-action-confirmed').style.display = 'none';
+  }
+  if (section === 'type') {
+    document.getElementById('pf-type-active').style.display = 'block';
+    document.getElementById('pf-type-confirmed').style.display = 'none';
+    document.getElementById('pf-action').classList.add('pf-hidden');
+    document.getElementById('pf-action-active').style.display = 'block';
+    document.getElementById('pf-action-confirmed').style.display = 'none';
+  }
+  if (section === 'action') {
+    document.getElementById('pf-action-active').style.display = 'block';
+    document.getElementById('pf-action-confirmed').style.display = 'none';
+  }
+  lucide.createIcons();
+}
+
+
+
+function renderMapping() {
+  const body = document.getElementById('mappingBody');
+  const mobile = document.getElementById('mobileCards');
+  body.innerHTML = '';
+  mobile.innerHTML = '';
+
+  fields.forEach((f, idx) => {
+    if (filterMode === 'unmapped' && f.status !== 'unmapped') return;
+    if (filterMode === 'mapped' && f.status !== 'mapped') return;
+    if (searchQ && !f.csv.toLowerCase().includes(searchQ) && !(f.sf||'').toLowerCase().includes(searchQ)) return;
+
+    const badge = f.status === 'mapped'
+      ? `<span class="field-badge badge-mapped">Mapped</span>`
+      : f.status === 'ignored'
+      ? `<span class="field-badge badge-ignored">Not imported</span>`
+      : `<span class="field-badge badge-unmapped">Unmapped</span>`;
+
+    const sfVal = f.status === 'mapped' ? f.sf
+      : f.status === 'ignored' ? '<em style="color:var(--color-text-weak)">Do not import</em>'
+      : '<span style="color:var(--color-unmapped-text); font-weight:600;">—</span>';
+
+    const actionLabel = f.status === 'mapped' ? 'Change' : 'Map';
+    const actionClass = f.status === 'mapped' ? 'action-link weak' : 'action-link';
+
+    const unmappedClass = f.status === 'unmapped' ? ' row-unmapped' : '';
+
+    // Desktop
+    const tr = document.createElement('tr');
+    tr.className = unmappedClass.trim();
+    tr.innerHTML = `
+      <td style="background:white; width:80px;"><button class="${actionClass}" onclick="openOverlay(${idx})">${actionLabel}</button></td>
+      <td class="col-yours"><strong>${f.csv}</strong>&nbsp; ${badge}</td>
+      <td class="col-sf">${sfVal}</td>
+    `;
+    body.appendChild(tr);
+
+    // Mobile
+    const card = document.createElement('div');
+    card.className = 'm-card' + (f.status === 'unmapped' ? ' unmapped' : '');
+    card.innerHTML = `
+      <div class="m-card-row">
+        <div class="m-col">
+          <div class="m-col-label">Salesforce Field</div>
+          <div class="m-col-val">${sfVal}</div>
+        </div>
+        <div class="m-arrow">←</div>
+        <div class="m-col">
+          <div class="m-col-label">Your CSV Column</div>
+          <div class="m-col-val"><strong>${f.csv}</strong></div>
+        </div>
+      </div>
+      <div class="m-card-footer">${badge} <button class="${actionClass}" onclick="openOverlay(${idx})">${actionLabel}</button></div>
+    `;
+    mobile.appendChild(card);
+  });
+}
+
+function renderPreview() {
+  const panel = document.getElementById('previewPanel');
+  panel.innerHTML = '';
+  fields.forEach(f => {
+    const div = document.createElement('div');
+    div.className = 'preview-field';
+    const isUnmapped = f.status !== 'mapped';
+    div.innerHTML = `
+      <div class="lbl">${f.sf || f.csv}</div>
+      <div class="val ${isUnmapped ? 'unmapped' : ''}">${f.sample}</div>
+    `;
+    panel.appendChild(div);
+  });
+}
+
+function filterFields(mode, btn) {
+  filterMode = mode;
+  document.querySelectorAll('.toolbar-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderMapping();
+}
+
+function searchFields(val) {
+  searchQ = val.toLowerCase();
+  renderMapping();
+}
+
+// OVERLAY
+let overlayItems = [...SF_FIELDS];
+
+function openOverlay(idx) {
+  editIdx = idx;
+  const f = fields[idx];
+  document.getElementById('overlayFieldRepeat').textContent = '(' + f.csv + ')';
+  ignoreChecked = f.status === 'ignored';
+  renderOverlayList('');
+  document.getElementById('overlay').classList.add('open');
+  lucide.createIcons();
+}
+
+const CIRCLE_EMPTY = 'width:18px;height:18px;border-radius:50%;border:none;background:transparent;flex-shrink:0;display:block;transition:border 0.1s;';
+const CIRCLE_HOVER = 'width:18px;height:18px;border-radius:50%;border:1.5px solid #b0adab;background:white;flex-shrink:0;display:block;';
+const CIRCLE_SELECTED = 'width:18px;height:18px;border-radius:50%;background:white;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:11px;font-weight:700;color:var(--color-brand);';
+
+function makeCircle(selected) {
+  const s = document.createElement('span');
+  s.className = 'ol-check';
+  if (selected) {
+    s.style.cssText = CIRCLE_SELECTED;
+    s.textContent = '✓';
+  } else {
+    s.style.cssText = CIRCLE_EMPTY;
+  }
+  return s;
+}
+
+function resetAllRows(list) {
+  list.querySelectorAll('.overlay-item').forEach(i => {
+    i.classList.remove('selected');
+    const ck = i.querySelector('.ol-check');
+    if (ck) { ck.textContent = ''; ck.style.cssText = CIRCLE_EMPTY; }
+    const nm = i.querySelector('.ol-name');
+    if (nm) {
+      nm.style.fontWeight = '400';
+      nm.style.color = i.id === 'skipRow' ? 'var(--color-text-weak)' : 'var(--color-text)';
+    }
+    const eg = i.querySelector('.ol-eg');
+    if (eg) eg.style.color = 'var(--color-text-placeholder)';
+    if (i.id === 'skipRow') i.style.background = '#fafafa';
+  });
+  ignoreChecked = false;
+}
+
+function renderOverlayList(q) {
+  const list = document.getElementById('overlayList');
+  list.innerHTML = '';
+  const currentSF = editIdx !== null ? fields[editIdx].sf : null;
+
+  // Skip row — TOP of list, muted background, "do not map"
+  const isIgnored = fields[editIdx] && fields[editIdx].status === 'ignored';
+  const skipDiv = document.createElement('div');
+  skipDiv.id = 'skipRow';
+  skipDiv.className = 'overlay-item' + (isIgnored ? ' selected' : '');
+  skipDiv.style.cssText = `display:flex; align-items:center; gap:12px; padding:10px 20px; cursor:pointer; border-bottom:2px solid var(--color-border); background:${isIgnored ? 'var(--color-brand)' : '#f8f8f8'};`;
+  const skipCircle = makeCircle(isIgnored);
+  const skipName = document.createElement('span');
+  skipName.className = 'ol-name';
+  skipName.textContent = 'Do not import this column';
+  skipName.style.cssText = `flex:1; font-size:13px; font-weight:${isIgnored ? '600' : '400'}; color:${isIgnored ? 'white' : 'var(--color-text-weak)'};`;
+  skipDiv.appendChild(skipCircle);
+  skipDiv.appendChild(skipName);
+  skipDiv.onmouseenter = () => { if (!skipDiv.classList.contains('selected')) { skipDiv.style.background = '#f0f0f0'; const ck = skipDiv.querySelector('.ol-check'); if(ck && !ck.textContent) ck.style.cssText = CIRCLE_HOVER; } };
+  skipDiv.onmouseleave = () => { if (!skipDiv.classList.contains('selected')) { skipDiv.style.background = '#f8f8f8'; const ck = skipDiv.querySelector('.ol-check'); if(ck && !ck.textContent) ck.style.cssText = CIRCLE_EMPTY; } };
+  skipDiv.onclick = () => {
+    resetAllRows(list);
+    ignoreChecked = true;
+    skipDiv.classList.add('selected');
+    skipDiv.style.background = 'var(--color-brand)';
+    const ck = skipDiv.querySelector('.ol-check');
+    ck.textContent = '✓'; ck.style.cssText = CIRCLE_SELECTED;
+    skipName.style.fontWeight = '600'; skipName.style.color = 'white';
+  };
+  list.appendChild(skipDiv);
+
+  SF_FIELDS.forEach((sf) => {
+    const isSelected = sf.name === currentSF && fields[editIdx] && fields[editIdx].status === 'mapped';
+    const div = document.createElement('div');
+    div.className = 'overlay-item' + (isSelected ? ' selected' : '');
+    div.dataset.value = sf.name;
+    div.style.cssText = `display:flex; align-items:center; gap:12px; padding:10px 20px; cursor:pointer; border-bottom:1px solid var(--color-border-light); background:${isSelected ? 'var(--color-brand)' : 'white'};`;
+
+    const circle = makeCircle(isSelected);
+    const name = document.createElement('span');
+    name.className = 'ol-name';
+    name.textContent = sf.name;
+    name.style.cssText = `flex:1; font-size:13px; font-weight:${isSelected ? '600' : '400'}; color:${isSelected ? 'white' : 'var(--color-text)'};`;
+    const eg = document.createElement('span');
+    eg.className = 'ol-eg';
+    eg.textContent = 'e.g. ' + sf.example;
+    eg.style.cssText = `font-size:11px; font-style:italic; white-space:nowrap; flex-shrink:0; color:${isSelected ? 'rgba(255,255,255,0.7)' : 'var(--color-text-placeholder)'};`;
+
+    div.appendChild(circle);
+    div.appendChild(name);
+    div.appendChild(eg);
+
+    div.onmouseenter = () => { if (!div.classList.contains('selected')) { div.style.background = 'var(--color-brand-light)'; const ck = div.querySelector('.ol-check'); if(ck && !ck.textContent) ck.style.cssText = CIRCLE_HOVER; } };
+    div.onmouseleave = () => { if (!div.classList.contains('selected')) { div.style.background = 'white'; const ck = div.querySelector('.ol-check'); if(ck && !ck.textContent) ck.style.cssText = CIRCLE_EMPTY; } };
+
+    div.onclick = () => {
+      resetAllRows(list);
+      div.classList.add('selected');
+      div.style.background = 'var(--color-brand)';
+      const ck = div.querySelector('.ol-check');
+      ck.textContent = '✓'; ck.style.cssText = CIRCLE_SELECTED;
+      name.style.fontWeight = '600'; name.style.color = 'white';
+      eg.style.color = 'rgba(255,255,255,0.7)';
+      ignoreChecked = false;
+    };
+    list.appendChild(div);
+  });
+
+}
+
+let ignoreChecked = false;
+function handleIgnoreCheck() {}
+function filterOverlay(q) { renderOverlayList(q); }
+
+function handleOverlayClick(e) {
+  if (e.target === document.getElementById('overlay')) closeOverlay();
+}
+
+function filterOverlay(q) { renderOverlayList(q); }
+
+function closeOverlay() {
+  document.getElementById('overlay').classList.remove('open');
+  editIdx = null;
+}
+
+function applyMapping() {
+  if (editIdx === null) return;
+  const sel = document.querySelector('#overlayList .overlay-item.selected');
+  if (ignoreChecked) {
+    fields[editIdx].status = 'ignored';
+    fields[editIdx].sf = null;
+  } else if (sel) {
+    fields[editIdx].sf = sel.dataset.value;
+    fields[editIdx].status = 'mapped';
+  }
+  closeOverlay();
+  renderMapping();
+  renderPreview();
+}
+
+const faqs = [
+  {
+    q: "How do I prepare my CSV for import?",
+    a: "Make sure column headers match or closely resemble Salesforce field names — the wizard will auto-map them. Remove any completely blank rows, and save the file as UTF-8 encoded CSV. Date fields should match your org's locale format."
+  },
+  {
+    q: "How does duplicate detection work?",
+    a: "The wizard checks for exact duplicates based on the matching rule you select (usually name or email). Duplicate records are skipped during import, not merged. For more advanced deduplication, clean your file before importing or use a third-party deduplication tool after import."
+  },
+  {
+    q: "What happens to unmapped fields?",
+    a: "Any column in your CSV that is not mapped to a Salesforce field is ignored — that data will not be imported. You can review and adjust all mappings in Step 2 before the import runs."
+  },
+  {
+    q: "What file formats are supported?",
+    a: "The Data Import Wizard supports CSV (.csv) files. If your data is in Excel, save it as CSV first. Google Sheets can be exported as CSV from File → Download."
+  },
+  {
+    q: "Can I undo an import after it runs?",
+    a: "There is no built-in undo. Once an import runs it cannot be cancelled or reversed automatically. If you need to remove imported records, you can use Data Loader to mass-delete them using the import log file as a reference."
+  },
+  {
+    q: "What is the record limit per import?",
+    a: "The Data Import Wizard supports up to 50,000 records per import. For larger data sets, use Salesforce Data Loader."
+  },
+  {
+    q: "Do workflow rules trigger on import?",
+    a: "Workflow rules are optional — you can choose whether to trigger them in the import options on Step 3. Assignment rules do not trigger on import by default."
+  }
+];
+
+function buildFAQ() {
+  const container = document.getElementById('faqAccordion');
+  if (!container) return;
+  faqs.forEach((faq, i) => {
+    const item = document.createElement('div');
+    item.className = 'faq-item';
+    item.innerHTML = `
+      <button class="faq-question" onclick="toggleFAQ(${i})">
+        ${faq.q}
+        <i data-lucide="chevron-down" class="faq-chevron" style="width:16px;height:16px;stroke:currentColor;stroke-width:2;fill:none;" aria-hidden="true"></i>
+      </button>
+      <div class="faq-answer">${faq.a}</div>
+    `;
+    container.appendChild(item);
+  });
+}
+
+function toggleFAQ(idx) {
+  const items = document.querySelectorAll('.faq-item');
+  items.forEach((item, i) => {
+    if (i === idx) {
+      item.classList.toggle('open');
+    } else {
+      item.classList.remove('open');
+    }
+  });
+  lucide.createIcons();
+}
+
+const importHistory = [
+  { date:'Oct 1, 2026  8:03 PM', file:'LinkedInExport_Q4.csv',     object:'Accounts & Contacts', status:'completed',         imported:3829, skipped:18,  errors:0,  user:'Isaak Hayes',    fresh:true },
+  { date:'Sep 18, 2026 11:22 AM', file:'Leads_Webinar_Sept.csv',   object:'Leads',               status:'completed',         imported:512,  skipped:4,   errors:0,  user:'Isaak Hayes',    fresh:false },
+  { date:'Sep 10, 2026 2:15 PM',  file:'AccountsUpdate_Q3.csv',    object:'Accounts & Contacts', status:'warnings',          imported:1204, skipped:33,  errors:7,  user:'Dean Nakabayashi',fresh:false },
+  { date:'Aug 28, 2026 9:41 AM',  file:'CampaignMembers_Aug.csv',  object:'Campaign Members',    status:'completed',         imported:874,  skipped:0,   errors:0,  user:'Isaak Hayes',    fresh:false },
+  { date:'Aug 14, 2026 4:05 PM',  file:'Leads_TradeShow_NYC.csv',  object:'Leads',               status:'completed',         imported:293,  skipped:12,  errors:0,  user:'Dean Nakabayashi',fresh:false },
+  { date:'Jul 30, 2026 10:18 AM', file:'Contacts_EnterpriseTier.csv',object:'Accounts & Contacts',status:'completed',        imported:2100, skipped:47,  errors:0,  user:'Isaak Hayes',    fresh:false },
+  { date:'Jul 12, 2026 3:33 PM',  file:'CustomObj_ProductData.csv',object:'Custom Objects',      status:'warnings',          imported:388,  skipped:5,   errors:3,  user:'Dean Nakabayashi',fresh:false },
+  { date:'Jun 25, 2026 8:50 AM',  file:'Leads_Q2_Final.csv',       object:'Leads',               status:'completed',         imported:1547, skipped:29,  errors:0,  user:'Isaak Hayes',    fresh:false },
+  { date:'Jun 8, 2026  1:12 PM',  file:'SolutionsKB_Update.csv',   object:'Solutions',           status:'failed',            imported:0,    skipped:0,   errors:42, user:'Dean Nakabayashi',fresh:false },
+  { date:'May 20, 2026 9:05 AM',  file:'Contacts_Salesforce_Orig.csv',object:'Accounts & Contacts',status:'completed',      imported:4200, skipped:102, errors:0,  user:'Isaak Hayes',    fresh:false },
+];
+
+const statusConfig = {
+  completed: { label:'Completed',              bg:'#eaf5ea', color:'#2e6b3e' },
+  warnings:  { label:'Completed with warnings',bg:'#fef5e0', color:'#7a5000' },
+  failed:    { label:'Failed',                 bg:'#fce9e9', color:'#8c1c13' },
+};
+
+function buildHistory() {
+  const body = document.getElementById('historyBody');
+  if (!body) return;
+  body.innerHTML = '';
+  importHistory.forEach((row, i) => {
+    const s = statusConfig[row.status];
+    const tr = document.createElement('tr');
+    tr.style.cssText = `border-bottom:1px solid #e5e5e5; background:${row.fresh ? '#f0f7ff' : i % 2 === 0 ? 'white' : '#fafafa'};`;
+    tr.innerHTML = `
+      <td style="padding:10px 16px; white-space:nowrap; color:#706e6b;">
+        ${row.fresh ? '<span style="display:inline-block;background:#0176d3;color:white;font-size:9px;font-weight:700;padding:1px 5px;border-radius:8px;margin-right:5px;vertical-align:middle;">NEW</span>' : ''}
+        ${row.date}
+      </td>
+      <td style="padding:10px 16px; color:#0176d3; font-weight:600; cursor:pointer; white-space:nowrap;">${row.file}</td>
+      <td style="padding:10px 16px; white-space:nowrap;">${row.object}</td>
+      <td style="padding:10px 16px; white-space:nowrap;">
+        <span style="background:${s.bg}; color:${s.color}; padding:2px 8px; border-radius:10px; font-size:11px; font-weight:700;">${s.label}</span>
+      </td>
+      <td style="padding:10px 16px; text-align:right; font-weight:600;">${row.imported.toLocaleString()}</td>
+      <td style="padding:10px 16px; text-align:right; color:${row.skipped > 0 ? '#a57300' : '#706e6b'};">${row.skipped}</td>
+      <td style="padding:10px 16px; text-align:right; color:${row.errors > 0 ? '#ba0517' : '#706e6b'}; font-weight:${row.errors > 0 ? '700' : '400'};">${row.errors}</td>
+      <td style="padding:10px 16px; white-space:nowrap; color:#706e6b;">${row.user}</td>
+      <td style="padding:10px 16px; white-space:nowrap;">
+        <span style="color:#0176d3; font-weight:600; cursor:pointer; font-size:12px; margin-right:10px;">View</span>
+        <span style="color:#0176d3; font-weight:600; cursor:pointer; font-size:12px;">Download</span>
+      </td>
+    `;
+    body.appendChild(tr);
+  });
+}
+
+// Init
+goTo('landing');
+buildFAQ();
+buildHistory();
+lucide.createIcons();
+</script>
+</body>
+</html>
