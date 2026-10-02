@@ -168,7 +168,7 @@ body {
 .main {
   flex: 1;
   padding: 20px 24px;
-  max-width: 1100px;
+  max-width: 960px;
   margin: 0 auto;
   width: 100%;
 }
@@ -267,6 +267,7 @@ body {
   justify-content: center;
   align-items: flex-start;
   gap: 0;
+  margin-top: 20px;
   margin-bottom: 28px;
   flex-wrap: wrap;
 }
@@ -441,6 +442,11 @@ body {
 .pf-section:last-child { border-bottom: none; margin-bottom: 8px; }
 
 .pf-hidden { display: none; }
+
+.pf-locked {
+  opacity: 0.4;
+  pointer-events: none;
+}
 
 .pf-label {
   font-size: 11px;
@@ -950,7 +956,7 @@ input[type="checkbox"], input[type="radio"] {
 /* ---- RESPONSIVE ---- */
 .faq-accordion {
   margin-top: 8px;
-  max-width: 680px;
+  max-width: 860px;
   margin-left: auto;
   margin-right: auto;
 }
@@ -1119,7 +1125,7 @@ input[type="checkbox"], input[type="radio"] {
     <div style="margin-top:10px; font-size:12px; color:var(--color-text-weak);">or drag your CSV file here...</div>
   </div>
 
-  <div style="max-width:680px; margin: 20px auto 6px; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.6px; color:var(--color-text-weak);">Frequently asked questions</div>
+  <div style="max-width:860px; margin: 20px auto 6px; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.6px; color:var(--color-text-weak);">Frequently asked questions</div>
   <div class="faq-accordion" id="faqAccordion"></div>
 </div>
 
@@ -1152,78 +1158,82 @@ input[type="checkbox"], input[type="radio"] {
       </div>
 
       <!-- SECTION 2: Object type -->
-      <div class="pf-section pf-hidden" id="pf-type">
-        <div class="pf-label">What type of records are these?</div>
-        <div class="pf-active" id="pf-type-active">
-          <div class="pf-list">
-            <div class="pf-list-item" onclick="confirmType('Accounts & Contacts')">
-              <div>
-                <div style="font-weight:600; margin-bottom:2px;">Accounts & Contacts</div>
-                <div style="font-size:12px; color:var(--color-text-weak);">Companies and the people who work there</div>
+      <div class="pf-section" id="pf-type">
+        <div class="pf-label" style="color:var(--color-text-placeholder);" id="pf-type-label">What type of records are these?</div>
+        <div class="pf-body" id="pf-type-body" style="display:none; overflow:hidden;">
+          <div class="pf-active" id="pf-type-active">
+            <div class="pf-list">
+              <div class="pf-list-item" onclick="confirmType('Accounts & Contacts')">
+                <div>
+                  <div style="font-weight:600; margin-bottom:2px;">Accounts & Contacts</div>
+                  <div style="font-size:12px; color:var(--color-text-weak);">Companies and the people who work there</div>
+                </div>
               </div>
-            </div>
-            <div class="pf-list-item" onclick="confirmType('Leads')">
-              <div>
-                <div style="font-weight:600; margin-bottom:2px;">Leads</div>
-                <div style="font-size:12px; color:var(--color-text-weak);">New prospects you haven't qualified yet</div>
+              <div class="pf-list-item" onclick="confirmType('Leads')">
+                <div>
+                  <div style="font-weight:600; margin-bottom:2px;">Leads</div>
+                  <div style="font-size:12px; color:var(--color-text-weak);">New prospects you haven't qualified yet</div>
+                </div>
               </div>
-            </div>
-            <div class="pf-list-item" onclick="confirmType('Solutions')">
-              <div>
-                <div style="font-weight:600; margin-bottom:2px;">Solutions</div>
-                <div style="font-size:12px; color:var(--color-text-weak);">Knowledge base articles and resolved cases</div>
+              <div class="pf-list-item" onclick="confirmType('Solutions')">
+                <div>
+                  <div style="font-weight:600; margin-bottom:2px;">Solutions</div>
+                  <div style="font-size:12px; color:var(--color-text-weak);">Knowledge base articles and resolved cases</div>
+                </div>
               </div>
-            </div>
-            <div class="pf-list-item" onclick="confirmType('Custom Objects')">
-              <div>
-                <div style="font-weight:600; margin-bottom:2px;">Custom Objects</div>
-                <div style="font-size:12px; color:var(--color-text-weak);">Data types unique to your Salesforce org</div>
+              <div class="pf-list-item" onclick="confirmType('Custom Objects')">
+                <div>
+                  <div style="font-weight:600; margin-bottom:2px;">Custom Objects</div>
+                  <div style="font-size:12px; color:var(--color-text-weak);">Data types unique to your Salesforce org</div>
+                </div>
               </div>
-            </div>
-            <div class="pf-list-item" onclick="confirmType('Campaign Members')">
-              <div>
-                <div style="font-weight:600; margin-bottom:2px;">Campaign Members</div>
-                <div style="font-size:12px; color:var(--color-text-weak);">Contacts or leads tied to a marketing campaign</div>
+              <div class="pf-list-item" onclick="confirmType('Campaign Members')">
+                <div>
+                  <div style="font-weight:600; margin-bottom:2px;">Campaign Members</div>
+                  <div style="font-size:12px; color:var(--color-text-weak);">Contacts or leads tied to a marketing campaign</div>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-        <div class="pf-confirmed" id="pf-type-confirmed" style="display:none;">
-          <i data-lucide="check-circle" style="width:16px;height:16px;stroke:var(--color-success);stroke-width:2;fill:none;flex-shrink:0;" aria-hidden="true"></i>
-          <span class="pf-confirmed-value" id="pf-type-value"></span>
-          <button class="pf-change-btn" onclick="resetFrom('type')">Change</button>
+          <div class="pf-confirmed" id="pf-type-confirmed" style="display:none;">
+            <i data-lucide="check-circle" style="width:16px;height:16px;stroke:var(--color-success);stroke-width:2;fill:none;flex-shrink:0;" aria-hidden="true"></i>
+            <span class="pf-confirmed-value" id="pf-type-value"></span>
+            <button class="pf-change-btn" onclick="resetFrom('type')">Change</button>
+          </div>
         </div>
       </div>
 
       <!-- SECTION 3: What to do -->
-      <div class="pf-section pf-hidden" id="pf-action">
-        <div class="pf-label">What do you want to do with these records?</div>
-        <div class="pf-active" id="pf-action-active">
-          <div class="pf-list">
-            <div class="pf-list-item" onclick="confirmAction('Add these as new records')">
-              <div>
-                <div style="font-weight:600; margin-bottom:2px;">Add these as new records</div>
-                <div style="font-size:12px; color:var(--color-text-weak);">They don't exist in Salesforce yet</div>
+      <div class="pf-section" id="pf-action">
+        <div class="pf-label" style="color:var(--color-text-placeholder);" id="pf-action-label">What do you want to do with these records?</div>
+        <div class="pf-body" id="pf-action-body" style="display:none; overflow:hidden;">
+          <div class="pf-active" id="pf-action-active">
+            <div class="pf-list">
+              <div class="pf-list-item" onclick="confirmAction('Add these as new records')">
+                <div>
+                  <div style="font-weight:600; margin-bottom:2px;">Add these as new records</div>
+                  <div style="font-size:12px; color:var(--color-text-weak);">They don't exist in Salesforce yet</div>
+                </div>
               </div>
-            </div>
-            <div class="pf-list-item" onclick="confirmAction('Update records I already have')">
-              <div>
-                <div style="font-weight:600; margin-bottom:2px;">Update records I already have</div>
-                <div style="font-size:12px; color:var(--color-text-weak);">Match and overwrite existing Salesforce records</div>
+              <div class="pf-list-item" onclick="confirmAction('Update records I already have')">
+                <div>
+                  <div style="font-weight:600; margin-bottom:2px;">Update records I already have</div>
+                  <div style="font-size:12px; color:var(--color-text-weak);">Match and overwrite existing Salesforce records</div>
+                </div>
               </div>
-            </div>
-            <div class="pf-list-item" onclick="confirmAction('Add new and update existing')">
-              <div>
-                <div style="font-weight:600; margin-bottom:2px;">Add new and update existing</div>
-                <div style="font-size:12px; color:var(--color-text-weak);">Handles both in a single import</div>
+              <div class="pf-list-item" onclick="confirmAction('Add new and update existing')">
+                <div>
+                  <div style="font-weight:600; margin-bottom:2px;">Add new and update existing</div>
+                  <div style="font-size:12px; color:var(--color-text-weak);">Handles both in a single import</div>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-        <div class="pf-confirmed" id="pf-action-confirmed" style="display:none;">
-          <i data-lucide="check-circle" style="width:16px;height:16px;stroke:var(--color-success);stroke-width:2;fill:none;flex-shrink:0;" aria-hidden="true"></i>
-          <span class="pf-confirmed-value" id="pf-action-value"></span>
-          <button class="pf-change-btn" onclick="resetFrom('action')">Change</button>
+          <div class="pf-confirmed" id="pf-action-confirmed" style="display:none;">
+            <i data-lucide="check-circle" style="width:16px;height:16px;stroke:var(--color-success);stroke-width:2;fill:none;flex-shrink:0;" aria-hidden="true"></i>
+            <span class="pf-confirmed-value" id="pf-action-value"></span>
+            <button class="pf-change-btn" onclick="resetFrom('action')">Change</button>
+          </div>
         </div>
       </div>
 
@@ -1726,10 +1736,24 @@ function pickItem(el, group) {
   el.classList.add('selected');
 }
 
+function openSection(bodyId, labelId) {
+  const body = document.getElementById(bodyId);
+  const label = document.getElementById(labelId);
+  body.style.display = 'block';
+  label.style.color = 'var(--color-text-weak)';
+  // animate open
+  body.style.maxHeight = '0';
+  body.style.transition = 'max-height 0.3s ease';
+  requestAnimationFrame(() => { body.style.maxHeight = '600px'; });
+  setTimeout(() => {
+    body.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }, 100);
+}
+
 function simulateUpload() {
   document.getElementById('pf-upload-active').style.display = 'none';
   document.getElementById('pf-upload-confirmed').style.display = 'flex';
-  document.getElementById('pf-type').classList.remove('pf-hidden');
+  openSection('pf-type-body', 'pf-type-label');
   lucide.createIcons();
 }
 
@@ -1737,7 +1761,8 @@ function confirmType(value) {
   document.getElementById('pf-type-active').style.display = 'none';
   document.getElementById('pf-type-value').textContent = value;
   document.getElementById('pf-type-confirmed').style.display = 'flex';
-  document.getElementById('pf-action').classList.remove('pf-hidden');
+  document.getElementById('pf-type-label').style.color = 'var(--color-text)';
+  openSection('pf-action-body', 'pf-action-label');
   lucide.createIcons();
 }
 
@@ -1748,21 +1773,29 @@ function confirmAction(value) {
   lucide.createIcons();
 }
 
+function collapseSection(bodyId, labelId) {
+  const body = document.getElementById(bodyId);
+  const label = document.getElementById(labelId);
+  body.style.maxHeight = '0';
+  setTimeout(() => { body.style.display = 'none'; }, 300);
+  label.style.color = 'var(--color-text-placeholder)';
+}
+
 function resetFrom(section) {
   if (section === 'upload') {
     document.getElementById('pf-upload-active').style.display = 'block';
     document.getElementById('pf-upload-confirmed').style.display = 'none';
-    document.getElementById('pf-type').classList.add('pf-hidden');
+    collapseSection('pf-type-body', 'pf-type-label');
     document.getElementById('pf-type-active').style.display = 'block';
     document.getElementById('pf-type-confirmed').style.display = 'none';
-    document.getElementById('pf-action').classList.add('pf-hidden');
+    collapseSection('pf-action-body', 'pf-action-label');
     document.getElementById('pf-action-active').style.display = 'block';
     document.getElementById('pf-action-confirmed').style.display = 'none';
   }
   if (section === 'type') {
     document.getElementById('pf-type-active').style.display = 'block';
     document.getElementById('pf-type-confirmed').style.display = 'none';
-    document.getElementById('pf-action').classList.add('pf-hidden');
+    collapseSection('pf-action-body', 'pf-action-label');
     document.getElementById('pf-action-active').style.display = 'block';
     document.getElementById('pf-action-confirmed').style.display = 'none';
   }
